@@ -53,8 +53,10 @@ RUN ARCH=$(dpkg --print-architecture) && \
     TARBALL="gohttpserver_1.3.0_linux_${GHS_ARCH}.tar.gz" && \
     curl -fsSL "https://github.com/codeskyblue/gohttpserver/releases/download/1.3.0/${TARBALL}" \
       -o "/tmp/${TARBALL}" && \
-    curl -fsSL "https://github.com/codeskyblue/gohttpserver/releases/download/1.3.0/gohttpserver_1.3.0_checksums.txt" \
-      | grep "${TARBALL}" | sha256sum --check --status && \
+    EXPECTED=$(curl -fsSL "https://github.com/codeskyblue/gohttpserver/releases/download/1.3.0/gohttpserver_1.3.0_checksums.txt" \
+      | grep "${TARBALL}" | awk '{print $1}') && \
+    ACTUAL=$(sha256sum "/tmp/${TARBALL}" | awk '{print $1}') && \
+    [ "$EXPECTED" = "$ACTUAL" ] || (echo "Checksum mismatch for ${TARBALL}" && exit 1) && \
     tar -xz -C /usr/local/bin --strip-components=0 -f "/tmp/${TARBALL}" gohttpserver && \
     chmod +x /usr/local/bin/gohttpserver && \
     rm "/tmp/${TARBALL}"
